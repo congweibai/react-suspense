@@ -10,6 +10,30 @@ type UsePromise<Value> = Promise<Value> & {
 	reason: unknown
 }
 
+function use<Value>(promise: Promise<Value>): Value {
+	const usePromise = promise as UsePromise<Value>
+	if (usePromise.status === 'fulfilled') {
+		return usePromise.value
+	} else if (usePromise.status === 'rejected') {
+		throw usePromise.reason
+	} else if (usePromise.status === 'pending') {
+		throw usePromise
+	} else {
+		usePromise.status = 'pending'
+		usePromise.then(
+			(result) => {
+				usePromise.status = 'fulfilled'
+				usePromise.value = result
+			},
+			(reason) => {
+				usePromise.status = 'rejected'
+				usePromise.reason = reason
+			},
+		)
+		throw usePromise
+	}
+}
+
 // 🐨 create a function called "use" which accepts a promise and here's what it should do:
 // - assign the promise to a variable called "usePromise" as a UsePromise
 // - if the usePromise.status is fuilfilled, return usePromise.value
@@ -20,7 +44,7 @@ type UsePromise<Value> = Promise<Value> & {
 //   - if the promise rejects, set usePromise.status to 'rejected' and set usePromise.reason to the rejection reason
 //   - then throw usePromise
 
-const shipName = 'Dreadnought'
+const shipName = 'Dreadyacht'
 // 🚨 If you want to to test out the error state, change this to 'Dreadyacht'
 // const shipName = 'Dreadyacht'
 
@@ -41,28 +65,11 @@ function App() {
 }
 
 // 💣 get rid of the ship, error, and status variables
-let ship: Ship
-let error: unknown
-let status: 'pending' | 'rejected' | 'fulfilled' = 'pending'
 const shipPromise = getShip(shipName)
-	// 💣 get rid of the .then here
-	.then(
-		(result) => {
-			ship = result
-			status = 'fulfilled'
-		},
-		(err) => {
-			error = err
-			status = 'rejected'
-		},
-	)
 
 function ShipDetails() {
-	// 💣 get rid of these if statements
-	if (status === 'rejected') throw error
-	if (status === 'pending') throw shipPromise
 	// 🐨 create a ship variable that's set to use(shipPromise)
-
+	const ship = use(shipPromise)
 	return (
 		<div className="ship-info">
 			<div className="ship-info__img-wrapper">
