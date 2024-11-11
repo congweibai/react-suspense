@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom/client'
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary'
 import { useSpinDelay } from 'spin-delay'
 import { type Ship, getShip, createShip } from './utils.tsx'
+import { useFormStatus } from 'react-dom'
 
 function App() {
 	const [shipName, setShipName] = useState('Dreadnought')
@@ -26,7 +27,10 @@ function App() {
 				<div className="details" style={{ opacity: isPending ? 0.6 : 1 }}>
 					<ErrorBoundary fallback={<ShipError shipName={shipName} />}>
 						<Suspense fallback={<ShipFallback shipName={shipName} />}>
-							<ShipDetails shipName={shipName} optimisticShip={optimisticShip} />
+							<ShipDetails
+								shipName={shipName}
+								optimisticShip={optimisticShip}
+							/>
 						</Suspense>
 					</ErrorBoundary>
 				</div>
@@ -78,7 +82,7 @@ function CreateForm({
 						/>
 					</div>
 					{/* 🐨 create a CreateButton component and move this into it */}
-					<button type="submit">Create</button>
+					<CreateButton />
 				</form>
 			</ErrorBoundary>
 		</div>
@@ -87,6 +91,13 @@ function CreateForm({
 
 // 🐨 create a CreateButton component here and get the form's pending state from useFormStatus
 // 🐨 if we're pending, set the button text to "Creating..." if not, it can be "Create"
+
+const CreateButton = () => {
+	const staus = useFormStatus()
+	return (
+		<button type="submit">{staus.pending ? 'Creating...' : 'Create'}</button>
+	)
+}
 
 async function createOptimisticShip(formData: FormData) {
 	return {
